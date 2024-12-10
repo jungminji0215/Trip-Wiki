@@ -12,3 +12,5 @@ app.get("/*", (req, res) => {
 app.listen(PORT, () => {
   console.log(`START SERVER`);
 });
+
+// 실행하려면 node ./server/server.js

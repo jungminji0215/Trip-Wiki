@@ -1,4 +1,4 @@
-export default function CityList({ $app, initialState }) {
+export default function CityList({ $app, initialState, handleLoadMore }) {
   console.log("---------- CityList ----------");
   console.log("$app :>> ", $app);
   console.log("initialState :>> ", initialState);
@@ -6,6 +6,7 @@ export default function CityList({ $app, initialState }) {
   this.state = initialState;
   this.$target = document.createElement("div");
   this.$target.className = "city-list";
+  this.handleLoadMore = handleLoadMore;
 
   $app.appendChild(this.$target);
 
@@ -31,6 +32,18 @@ export default function CityList({ $app, initialState }) {
 
   this.render = () => {
     this.$target.innerHTML = this.template();
+
+    // 아직 불러올 데이터가 존재한다면
+    if (!this.state.isEnd) {
+      const $loadMoreButton = document.createElement("button");
+      $loadMoreButton.className = "add-items-btn";
+      $loadMoreButton.textContent = "+ 더보기";
+      this.$target.appendChild($loadMoreButton);
+
+      $loadMoreButton.addEventListener("click", () => {
+        this.handleLoadMore();
+      });
+    }
   };
 
   this.setState = (newState) => {

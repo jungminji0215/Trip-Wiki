@@ -16,7 +16,12 @@ JavaScript는 객체의 속성을 동적으로 추가할 수 있음.
 
 // 이 함수는 Header라는 이름의 생성자 함수로 보인다.
 // JavaScript에서 생성자 함수는 보통 new 키워드를 사용하여 객체를 생성하고 초기화하는 데 사용된다.
-export default function Header() {
+export default function Header({
+  $app,
+  initialState,
+  handleSortChange,
+  handleSearchWord,
+}) {
   /**
    * 생성자 함수로 사용될 때 (new Header()):
    * this는 생성된 새 객체를 가리킨다.
@@ -25,12 +30,69 @@ export default function Header() {
    * this는 undefined가 될 가능성이 크다 (strict mode에서).
    * strict mode가 아니면 this는 전역 객체(window 또는 global)를 가리킬 수 있다.
    */
+  this.state = initialState;
   this.$target = document.createElement("div");
   this.$target.className = "header";
 
-  this.template = () => {};
+  this.handleSortChange = handleSortChange;
+  this.handleSearchWord = handleSearchWord;
+  $app.appendChild(this.$target);
 
-  this.render = () => {};
+  this.template = () => {
+    const { sortBy, searchWord } = this.state;
+    let temp = `
+    <div class="title">
+      <a href="/">✈️ Trip Wiki</a>
+    </div>
+    <div class="filter-search-container">
+      <div class="filter">
+        <select id="sortList" class="sort-list">
+          <option value="total" ${
+            sortBy === "total" ? "selected" : ""
+          }>Total</option>
+          <option value="cost" ${
+            sortBy === "cost" ? "selected" : ""
+          }>Cost</option>
+          <option value="fun" ${sortBy === "fun" ? "selected" : ""}>Fun</option>
+          <option value="safety" ${
+            sortBy === "safety" ? "selected" : ""
+          }>Safety</option>
+          <option value="internet" ${
+            sortBy === "internet" ? "selected" : ""
+          }>Internet</option>
+          <option value="air quality" ${
+            sortBy === "air quality" ? "selected" : ""
+          }>Air Quality</option>
+          <option value="food" ${
+            sortBy === "food" ? "selected" : ""
+          }>Food</option>
+
+        </select>
+      </div>
+      <div class="search">
+          <input type="text" placeholder="Search" id="search" autocomplete="off" value=${searchWord}>
+      </div>
+    </div>
+    `;
+
+    return temp;
+  };
+
+  this.render = () => {
+    this.$target.innerHTML = this.template();
+
+    document.getElementById("sortList").addEventListener("change", (event) => {
+      this.handleSortChange(event.target.value);
+    });
+
+    const $searchInput = document.getElementById("search");
+
+    $searchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.handleSearchWord($searchInput.value);
+      }
+    });
+  };
 
   this.setState = (newState) => {
     // this.state는 setState가 호출될 때 객체의 속성으로 동적으로 추가된다.

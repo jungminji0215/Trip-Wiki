@@ -5,16 +5,82 @@ import CityDetail from "./components/CityDetail.js";
 import { request } from "./api/api.js";
 
 export default function App($app) {
+  const getSortBy = () => {
+    if (window.location.search) {
+      return window.location.search.split("sort=")[1].split("&")[0];
+    }
+    return "total";
+  };
+
+  const getSearchWord = () => {
+    if (window.location.search && window.location.search.includes("search=")) {
+      return window.location.search.split("search=")[1];
+    }
+    return "";
+  };
+
   this.state = {
-    startIdx: 0, // 몇 번째 데이터부터 불러올 것인지
-    sortBy: "", // 정렬 필터
-    searchWord: "", // 검색어
+    startIdx: 0,
+    sortBy: getSortBy(),
+    searchWord: getSearchWord(),
     region: "",
     cities: "",
   };
 
   // 필요한 컴포넌트들 생성
-  const header = new Header();
+  const header = new Header({
+    $app,
+    initialState: {
+      sortBy: this.state.sortBy,
+      searchWord: this.state.searchWord,
+    },
+    handleSortChange: async (sortBy) => {
+      // 값이 변경할 때마다 페이지의 url 을 변경시켜주어야한다.
+      const pageUrl = `/${this.state.region}?sort=${sortBy}`;
+
+      history.pushState(
+        null,
+        null,
+        this.state.searchWord
+          ? pageUrl + `&search=${this.state.searchWord}`
+          : pageUrl
+      );
+
+      const cities = await request(
+        0,
+        this.state.region,
+        sortBy,
+        this.state.searchWord
+      );
+
+      this.setState({
+        ...this.state,
+        startIdx: 0,
+        sortBy: sortBy,
+        cities: cities,
+      });
+    },
+    handleSearchWord: async (searchWord) => {
+      history.pushState(
+        null,
+        null,
+        `/${this.state.region}?sort=${this.state.sortBy}&search=${searchWord}`
+      );
+
+      const cities = await request(
+        0,
+        this.state.region,
+        this.state.sortBy,
+        searchWord
+      );
+      this.setState({
+        ...this.state,
+        startIdx: 0,
+        searchWord: searchWord,
+        cities: cities,
+      });
+    },
+  });
   const regionList = new RegionList();
   const cityList = new CityList({
     $app,
@@ -43,6 +109,10 @@ export default function App($app) {
   this.setState = (newState) => {
     this.state = newState;
     cityList.setState(this.state.cities);
+    header.setState({
+      sortBy: this.state.sortBy,
+      searchWord: this.state.searchWord,
+    });
   };
 
   // 웹사이트에 처음 접속할 때 실행
